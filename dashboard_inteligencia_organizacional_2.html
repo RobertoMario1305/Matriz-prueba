@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Inteligencia Organizacional 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1a2e;line-height:1.5}
+:root{
+  --red:#e53e3e;--red-light:#fff5f5;--red-border:#feb2b2;
+  --amber:#d97706;--amber-light:#fffbeb;--amber-border:#fcd34d;
+  --green:#059669;--green-light:#f0fdf4;--green-border:#86efac;
+  --blue:#2563eb;--blue-light:#eff6ff;--blue-border:#93c5fd;
+  --purple:#7c3aed;--purple-light:#f5f3ff;
+  --gray:#6b7280;--gray-light:#f9fafb;--gray-border:#e5e7eb;
+  --shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.06);
+  --radius:8px;--radius-lg:12px
+}
+.header{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);position:sticky;top:0;z-index:200;box-shadow:0 2px 20px rgba(0,0,0,.3)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;gap:16px;flex-wrap:wrap}
+.header-brand{display:flex;align-items:center;gap:12px}
+.header-logo{width:36px;height:36px;border-radius:8px;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;color:white;font-size:16px}
+.header-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:white}
+.header-sub{font-size:11px;color:rgba(255,255,255,.5);font-family:'IBM Plex Mono',monospace}
+.header-meta{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.header-meta-item{text-align:center}
+.header-meta-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:white}
+.header-meta-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.1em}
+.header-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(229,62,62,.2);color:#fc8181;border:1px solid rgba(229,62,62,.3);font-family:'IBM Plex Mono',monospace;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+.tabs{background:white;border-bottom:1px solid var(--gray-border);padding:0 24px;display:flex;gap:0;overflow-x:auto;box-shadow:var(--shadow)}
+.tab-btn{padding:14px 18px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--gray);border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px}
+.tab-btn:hover{color:var(--blue)}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);background:var(--blue-light)}
+.tab-icon{font-size:14px}
+.filter-bar{background:white;border-bottom:1px solid var(--gray-border);padding:10px 24px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.filter-label{font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.filter-select{padding:6px 10px;border:1px solid var(--gray-border);border-radius:6px;font-size:12px;color:#374151;background:white;cursor:pointer;font-family:'Inter',sans-serif;transition:border-color .2s}
+.filter-select:focus{outline:none;border-color:var(--blue)}
+.filter-clear{padding:6px 12px;border:1px solid var(--gray-border);border-radius:6px;font-size:12px;cursor:pointer;background:var(--gray-light);color:var(--gray);font-family:'Inter',sans-serif;transition:all .2s}
+.filter-clear:hover{background:var(--red-light);color:var(--red);border-color:var(--red-border)}
+.upload-btn{padding:6px 14px;border:1px solid #2563eb;border-radius:6px;font-size:12px;cursor:pointer;background:var(--blue-light);color:var(--blue);font-family:'Inter',sans-serif;font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.upload-btn:hover{background:var(--blue);color:white}
+.upload-progress{font-size:11px;color:var(--green);font-family:'IBM Plex Mono',monospace;padding:4px 10px;background:var(--green-light);border:1px solid var(--green-border);border-radius:6px;display:none;align-items:center;gap:6px}
+.content{padding:20px 24px}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+.card{background:white;border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow);border:1px solid var(--gray-border)}
+.card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--gray);margin-bottom:16px;display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace}
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+.kpi-card{background:white;border-radius:var(--radius-lg);padding:16px 14px;box-shadow:var(--shadow);border:1px solid var(--gray-border);border-top:3px solid}
+.kpi-card.red{border-top-color:var(--red)}.kpi-card.amber{border-top-color:var(--amber)}.kpi-card.green{border-top-color:var(--green)}.kpi-card.blue{border-top-color:var(--blue)}.kpi-card.purple{border-top-color:var(--purple)}
+.kpi-lbl{font-size:10px;color:var(--gray);font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-family:'IBM Plex Mono',monospace;margin-bottom:8px}
+.kpi-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1;margin-bottom:4px}
+.kpi-card.red .kpi-val{color:var(--red)}.kpi-card.amber .kpi-val{color:var(--amber)}.kpi-card.green .kpi-val{color:var(--green)}.kpi-card.blue .kpi-val{color:var(--blue)}.kpi-card.purple .kpi-val{color:var(--purple)}
+.kpi-sub{font-size:11px;color:var(--gray)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:16px}
+.grid-3-2{display:grid;grid-template-columns:3fr 2fr;gap:16px}
+.mb16{margin-bottom:16px}.mb20{margin-bottom:20px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.badge-red{background:var(--red-light);color:var(--red);border:1px solid var(--red-border)}
+.badge-amber{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border)}
+.badge-green{background:var(--green-light);color:var(--green);border:1px solid var(--green-border)}
+.badge-blue{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-border)}
+.badge-gray{background:var(--gray-light);color:var(--gray);border:1px solid var(--gray-border)}
+.dot-red{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red)}
+.dot-amber{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.dot-green{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.dtable{width:100%;border-collapse:collapse;font-size:12px}
+.dtable th{text-align:left;padding:8px 12px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);background:var(--gray-light);border-bottom:2px solid var(--gray-border);font-family:'IBM Plex Mono',monospace}
+.dtable td{padding:9px 12px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+.dtable tr:hover td{background:#fafafa}
+.dtable tr:last-child td{border-bottom:none}
+.dtable tr.hidden-row{display:none}
+.rank-n{font-family:'Syne',sans-serif;font-weight:800;color:#d1d5db;font-size:16px}
+.prog-wrap{display:flex;align-items:center;gap:8px}
+.prog-track{flex:1;height:6px;background:#f3f4f6;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .8s ease}
+.prog-val{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;min-width:38px;text-align:right}
+.prog-fill.c-red{background:var(--red)}.prog-fill.c-amber{background:var(--amber)}.prog-fill.c-green{background:var(--green)}
+.score-circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;flex-shrink:0}
+.score-circle.red{background:var(--red-light);color:var(--red);border:2px solid var(--red-border)}
+.score-circle.amber{background:var(--amber-light);color:var(--amber);border:2px solid var(--amber-border)}
+.score-circle.green{background:var(--green-light);color:var(--green);border:2px solid var(--green-border)}
+.risk-item{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid #f3f4f6}
+.risk-item:last-child{border-bottom:none}
+.risk-body{flex:1;min-width:0}
+.risk-name{font-weight:600;font-size:13px;margin-bottom:3px}
+.risk-desc{font-size:11px;color:var(--gray);line-height:1.5}
+.risk-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.heatmap-table{width:100%;border-collapse:collapse;font-size:11px}
+.heatmap-table th{padding:6px 8px;background:var(--gray-light);border:1px solid var(--gray-border);font-size:9px;font-weight:600;color:var(--gray);text-align:center;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.heatmap-table th.row-header{text-align:left}
+.heatmap-table td{padding:5px 8px;border:1px solid #f0f0f0;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600}
+.heatmap-table td.dim-name{text-align:left;font-size:11px;font-weight:500;font-family:'Inter',sans-serif;padding:5px 10px;color:#374151;background:white;white-space:nowrap}
+.hm-critical{background:#fed7d7;color:#c53030}.hm-bad{background:#feebc8;color:#c05621}.hm-warning{background:#fefcbf;color:#975a16}.hm-ok{background:#c6f6d5;color:#276749}.hm-good{background:#ebf8ff;color:#2c5282}
+.alert{padding:12px 16px;border-radius:var(--radius);margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;font-size:12px;border-left:4px solid}
+.alert-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.alert-content{flex:1}
+.alert-title{font-weight:600;margin-bottom:3px;font-size:12px}
+.alert-body{color:#4b5563;line-height:1.5}
+.alert.red{background:var(--red-light);border-left-color:var(--red)}.alert.red .alert-title{color:var(--red)}
+.alert.amber{background:var(--amber-light);border-left-color:var(--amber)}.alert.amber .alert-title{color:var(--amber)}
+.alert.blue{background:var(--blue-light);border-left-color:var(--blue)}.alert.blue .alert-title{color:var(--blue)}
+.alert.green{background:var(--green-light);border-left-color:var(--green)}.alert.green .alert-title{color:var(--green)}
+.alert.hidden-row{display:none}
+.matrix-table{width:100%;border-collapse:collapse;font-size:11px}
+.matrix-table th{padding:10px 12px;background:#1a1a2e;color:white;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-family:'IBM Plex Mono',monospace;border:1px solid rgba(255,255,255,.1);text-align:center;white-space:nowrap}
+.matrix-table th.left{text-align:left}
+.matrix-table td{padding:10px 12px;border:1px solid var(--gray-border);vertical-align:middle}
+.matrix-table tr:hover td{background:#f9fafb}
+.matrix-table tr.hidden-row{display:none}
+.matrix-score{display:inline-flex;align-items:center;justify-content:center;width:36px;height:24px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700}
+.ms-red{background:var(--red-light);color:var(--red)}.ms-amber{background:var(--amber-light);color:var(--amber)}.ms-green{background:var(--green-light);color:var(--green)}.ms-gray{background:var(--gray-light);color:var(--gray)}
+.chart-wrap{position:relative}.chart-small{height:200px}.chart-medium{height:260px}.chart-tall{height:320px}
+.section-h{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#1a1a2e;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.section-h::before{content:'';display:block;width:4px;height:20px;background:var(--blue);border-radius:2px}
+.semaforo-panel{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.semaforo-block{padding:20px;border-radius:var(--radius-lg);text-align:center;border:1px solid}
+.semaforo-block.red{background:var(--red-light);border-color:var(--red-border)}.semaforo-block.amber{background:var(--amber-light);border-color:var(--amber-border)}.semaforo-block.green{background:var(--green-light);border-color:var(--green-border)}
+.semaforo-glow{width:20px;height:20px;border-radius:50%;margin:0 auto 10px}
+.semaforo-block.red .semaforo-glow{background:var(--red);box-shadow:0 0 12px var(--red)}.semaforo-block.amber .semaforo-glow{background:var(--amber);box-shadow:0 0 12px var(--amber)}.semaforo-block.green .semaforo-glow{background:var(--green);box-shadow:0 0 12px var(--green)}
+.semaforo-num{font-family:'Syne',sans-serif;font-size:36px;font-weight:800}
+.semaforo-block.red .semaforo-num{color:var(--red)}.semaforo-block.amber .semaforo-num{color:var(--amber)}.semaforo-block.green .semaforo-num{color:var(--green)}
+.semaforo-lbl{font-size:12px;font-weight:600;color:#374151;margin-top:4px}
+.semaforo-sub{font-size:10px;color:var(--gray);margin-top:4px}
+.scroll-x{overflow-x:auto}
+.no-data{text-align:center;padding:32px;color:var(--gray);font-style:italic;font-size:13px}
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:white;padding:12px 20px;border-radius:8px;font-size:12px;font-family:'IBM Plex Mono',monospace;z-index:9999;transform:translateY(100px);opacity:0;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:#059669}
+.toast.error{background:#e53e3e}
+.footer{background:white;border-top:1px solid var(--gray-border);padding:12px 24px;text-align:center;font-size:11px;color:var(--gray);font-family:'IBM Plex Mono',monospace}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr)}.grid-2,.grid-3,.grid-1-2,.grid-3-2{grid-template-columns:1fr}}
+@media(max-width:600px){.kpi-row{grid-template-columns:repeat(2,1fr)}.content{padding:12px}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="header-logo">IO</div>
+      <div>
+        <div class="header-title">Dashboard · Inteligencia Organizacional</div>
+        <div class="header-sub" id="header-periodo">SFM Facilities Management — Periodo: Ene–Abr 2026</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="header-meta-item"><div class="header-meta-val" id="hdr-activos">418</div><div class="header-meta-lbl">Activos</div></div>
+      <div class="header-meta-item"><div class="header-meta-val" style="color:#fc8181" id="hdr-bajas">107</div><div class="header-meta-lbl">Bajas</div></div>
+      <div class="header-meta-item"><div class="header-meta-val" style="color:#6ee7b7" id="hdr-altas">136</div><div class="header-meta-lbl">Altas</div></div>
+      <div class="header-meta-item"><div class="header-meta-val" style="color:#fca5a5" id="hdr-sind">24</div><div class="header-meta-lbl">Sindicalizados</div></div>
+      <div class="header-badge">⚠ ALERTA ORGANIZACIONAL ACTIVA</div>
+    </div>
+  </div>
+</header>
+
+<!-- TABS -->
+<nav class="tabs">
+  <button class="tab-btn active" onclick="showTab('overview')" data-tab="overview"><span class="tab-icon">🏠</span> General</button>
+  <button class="tab-btn" onclick="showTab('clima')" data-tab="clima"><span class="tab-icon">🌡</span> Clima Laboral</button>
+  <button class="tab-btn" onclick="showTab('rotacion')" data-tab="rotacion"><span class="tab-icon">🔄</span> Rotación</button>
+  <button class="tab-btn" onclick="showTab('sindicato')" data-tab="sindicato"><span class="tab-icon">⚖</span> Sindicato</button>
+  <button class="tab-btn" onclick="showTab('desempeno')" data-tab="desempeno"><span class="tab-icon">📊</span> Desempeño</button>
+  <button class="tab-btn" onclick="showTab('matriz')" data-tab="matriz"><span class="tab-icon">🔗</span> Matriz Relacional</button>
+  <button class="tab-btn" onclick="showTab('alertas')" data-tab="alertas"><span class="tab-icon">🚨</span> Alertas</button>
+</nav>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <span class="filter-label">Filtros:</span>
+  <select class="filter-select" id="f-area" onchange="applyFilters()">
+    <option value="">Todas las operaciones</option>
+  </select>
+  <select class="filter-select" id="f-supervisor" onchange="applyFilters()">
+    <option value="">Todos los supervisores</option>
+  </select>
+  <select class="filter-select" id="f-riesgo" onchange="applyFilters()">
+    <option value="">Todos los niveles</option>
+    <option value="rojo">🔴 Rojo — Crítico</option>
+    <option value="amarillo">🟡 Amarillo — Medio</option>
+    <option value="verde">🟢 Verde — Controlado</option>
+  </select>
+  <select class="filter-select" id="f-motivo" onchange="applyFilters()">
+    <option value="">Todos los motivos de cese</option>
+    <option value="renuncia">Renuncia Voluntaria</option>
+    <option value="termino">Término de Contrato</option>
+    <option value="prueba">Periodo de Prueba</option>
+    <option value="no_inicio">No inició vínculo</option>
+    <option value="retiro">Retiro de Confianza</option>
+    <option value="mutuo">Mutuo Disenso</option>
+  </select>
+  <button class="filter-clear" onclick="clearFilters()">✕ Limpiar</button>
+  <label class="upload-btn" for="excel-upload" title="Cargar Excel para actualizar el dashboard">
+    📂 Cargar Excel
+  </label>
+  <input type="file" id="excel-upload" accept=".xls,.xlsx" style="display:none" onchange="handleExcelUpload(event)">
+  <span class="upload-progress" id="upload-progress">⟳ Procesando...</span>
+  <span style="font-size:10px;color:var(--gray);font-family:'IBM Plex Mono',monospace;margin-left:auto" id="filter-status">Mostrando todos los registros</span>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- ===== TAB GENERAL ===== -->
+<div id="tab-overview" class="tab-pane active">
+  <div class="kpi-row mb20">
+    <div class="kpi-card blue"><div class="kpi-lbl">Total activos</div><div class="kpi-val" id="kpi-activos">418</div><div class="kpi-sub">al 28/02/2026</div></div>
+    <div class="kpi-card green"><div class="kpi-lbl">Altas período</div><div class="kpi-val" id="kpi-altas">136</div><div class="kpi-sub" id="kpi-altas-sub">Crecimiento neto +29</div></div>
+    <div class="kpi-card red"><div class="kpi-lbl">Bajas período</div><div class="kpi-val" id="kpi-bajas">107</div><div class="kpi-sub" id="kpi-bajas-sub">48.6% renuncias</div></div>
+    <div class="kpi-card red"><div class="kpi-lbl">Servicios en riesgo</div><div class="kpi-val" id="kpi-riesgo">6/7</div><div class="kpi-sub">Clima &lt;78%</div></div>
+    <div class="kpi-card amber"><div class="kpi-lbl">Sindicalizados</div><div class="kpi-val" id="kpi-sind">24</div><div class="kpi-sub">5.7% de la plantilla</div></div>
+    <div class="kpi-card purple"><div class="kpi-lbl">Clima mín. filtrado</div><div class="kpi-val" id="kpi-climamin">45%</div><div class="kpi-sub" id="kpi-climamin-sub">Serv. Mi Banco</div></div>
+  </div>
+
+  <div class="grid-1-2 mb20">
+    <div>
+      <div class="semaforo-panel">
+        <div class="semaforo-block red"><div class="semaforo-glow"></div><div class="semaforo-num" id="sem-rojo">6</div><div class="semaforo-lbl">Riesgo Crítico</div><div class="semaforo-sub">operaciones</div></div>
+        <div class="semaforo-block amber"><div class="semaforo-glow"></div><div class="semaforo-num" id="sem-amarillo">1</div><div class="semaforo-lbl">Riesgo Medio</div><div class="semaforo-sub">vigilancia</div></div>
+        <div class="semaforo-block green"><div class="semaforo-glow"></div><div class="semaforo-num" id="sem-verde">0</div><div class="semaforo-lbl">Controlado</div><div class="semaforo-sub">ninguno aún</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Score global de riesgo</div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="font-family:'Syne',sans-serif;font-size:64px;font-weight:800;color:var(--red);line-height:1" id="score-global">8.6</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--red)">NIVEL CRÍTICO</div>
+            <div style="font-size:12px;color:var(--gray);margin-top:4px;line-height:1.5">Organización en zona de alto riesgo.<br>Requiere intervención inmediata.</div>
+            <div style="margin-top:10px"><span class="badge badge-red">Clima crítico</span>&nbsp;<span class="badge badge-red">Alta rotación</span>&nbsp;<span class="badge badge-amber">Sindicato activo</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top alertas activas</div>
+      <div id="panel-top-alertas"></div>
+    </div>
+  </div>
+
+  <div class="grid-2 mb20">
+    <div class="card">
+      <div class="card-title">Ranking — Operaciones críticas filtradas</div>
+      <table class="dtable">
+        <thead><tr><th>#</th><th>Operación</th><th>Clima</th><th>Bajas</th><th>Sind.</th><th>Riesgo</th></tr></thead>
+        <tbody id="tbody-ranking-general"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Clima por servicio</div>
+      <div class="chart-wrap chart-medium"><canvas id="chartClimaOverview"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card"><div class="card-title">Motivos de cese</div><div class="chart-wrap chart-medium"><canvas id="chartMotivos"></canvas></div></div>
+    <div class="card"><div class="card-title">Distribución talento 2025</div><div class="chart-wrap chart-medium"><canvas id="chartTalento"></canvas></div></div>
+    <div class="card"><div class="card-title">Distribución sindical</div><div class="chart-wrap chart-medium"><canvas id="chartSindicato"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ===== TAB CLIMA ===== -->
+<div id="tab-clima" class="tab-pane">
+  <div class="section-h">Clima Laboral — Análisis por Servicio y Dimensión</div>
+  <div class="kpi-row mb20" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi-card red"><div class="kpi-lbl">Clima mínimo</div><div class="kpi-val" id="kpi-clima-min2">45%</div><div class="kpi-sub" id="kpi-clima-min2-sub">Serv. Mi Banco</div></div>
+    <div class="kpi-card red"><div class="kpi-lbl">En zona crítica</div><div class="kpi-val" id="kpi-clima-criticos">6/7</div><div class="kpi-sub">servicios &lt;78%</div></div>
+    <div class="kpi-card amber"><div class="kpi-lbl">Score promedio</div><div class="kpi-val" id="kpi-clima-prom">65%</div><div class="kpi-sub">todos los servicios</div></div>
+    <div class="kpi-card blue"><div class="kpi-lbl">Dimensión más baja</div><div class="kpi-val">17%</div><div class="kpi-sub">Misión/Visión · Mi Banco</div></div>
+  </div>
+  <div class="card mb20 scroll-x">
+    <div class="card-title">Heatmap — Dimensiones × Servicios</div>
+    <table class="heatmap-table">
+      <thead>
+        <tr>
+          <th class="row-header">Dimensión</th>
+          <th>Mi Banco</th><th>D.Electromec.</th><th>D.Normativa</th><th>Zon.3</th><th>CrediScotia</th><th>Falabella</th><th>Scotiabank</th>
+        </tr>
+        <tr>
+          <th class="row-header" style="color:#888;font-size:9px">Promedio</th>
+          <th style="font-size:11px;font-weight:800;color:#c53030">45.4%</th>
+          <th style="font-size:11px;font-weight:800;color:#c53030">48.3%</th>
+          <th style="font-size:11px;font-weight:800;color:#c05621">70.9%</th>
+          <th style="font-size:11px;font-weight:800;color:#c05621">67.3%</th>
+          <th style="font-size:11px;font-weight:800;color:#c05621">66.3%</th>
+          <th style="font-size:11px;font-weight:800;color:#975a16">76.1%</th>
+          <th style="font-size:11px;font-weight:800;color:#276749">78.9%</th>
+        </tr>
+      </thead>
+      <tbody id="heatmap-body"></tbody>
+    </table>
+    <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;font-size:11px">
+      <span><span style="display:inline-block;width:12px;height:12px;background:#fed7d7;border-radius:2px;margin-right:4px"></span>&lt;50%</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:#feebc8;border-radius:2px;margin-right:4px"></span>50–65%</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:#fefcbf;border-radius:2px;margin-right:4px"></span>65–78%</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:#c6f6d5;border-radius:2px;margin-right:4px"></span>78–90%</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:#ebf8ff;border-radius:2px;margin-right:4px"></span>&gt;90%</span>
+    </div>
+  </div>
+  <div class="grid-2 mb20">
+    <div class="card"><div class="card-title">Score por servicio</div><div class="chart-wrap chart-tall"><canvas id="chartClimaBar"></canvas></div></div>
+    <div class="card"><div class="card-title">Radar — Mi Banco vs Scotiabank</div><div class="chart-wrap chart-tall"><canvas id="chartClimaRadar"></canvas></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Mi Banco — Dimensiones críticas</div>
+      <table class="dtable">
+        <thead><tr><th>Dimensión</th><th>Score</th><th>Barra</th><th>Nivel</th></tr></thead>
+        <tbody>
+          <tr><td>Misión y Visión</td><td style="color:var(--red);font-weight:700;font-family:'IBM Plex Mono',monospace">17%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-red" style="width:17%"></div></div></div></td><td><span class="badge badge-red">Colapso</span></td></tr>
+          <tr><td>Habilidad (Gerencia)</td><td style="color:var(--red);font-weight:700;font-family:'IBM Plex Mono',monospace">17%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-red" style="width:17%"></div></div></div></td><td><span class="badge badge-red">Colapso</span></td></tr>
+          <tr><td>Relación Jefe Directo</td><td style="color:var(--red);font-weight:700;font-family:'IBM Plex Mono',monospace">33%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-red" style="width:33%"></div></div></div></td><td><span class="badge badge-red">Colapso</span></td></tr>
+          <tr><td>Reconocimiento</td><td style="color:var(--red);font-weight:700;font-family:'IBM Plex Mono',monospace">33%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-red" style="width:33%"></div></div></div></td><td><span class="badge badge-red">Colapso</span></td></tr>
+          <tr><td>Cultura</td><td style="color:var(--red);font-weight:700;font-family:'IBM Plex Mono',monospace">33%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-red" style="width:33%"></div></div></div></td><td><span class="badge badge-red">Colapso</span></td></tr>
+          <tr><td>Integridad (Gerencia)</td><td style="color:var(--red);font-weight:700;font-family:'IBM Plex Mono',monospace">38%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-red" style="width:38%"></div></div></div></td><td><span class="badge badge-red">Crítico</span></td></tr>
+          <tr><td>Liderazgo (Jefe)</td><td style="color:var(--red);font-weight:700;font-family:'IBM Plex Mono',monospace">46%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-red" style="width:46%"></div></div></div></td><td><span class="badge badge-red">Crítico</span></td></tr>
+          <tr><td>Ambiente Laboral</td><td style="color:var(--green);font-weight:700;font-family:'IBM Plex Mono',monospace">83%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-green" style="width:83%"></div></div></div></td><td><span class="badge badge-green">OK</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">D. Proyectos Electromecánicos</div>
+      <table class="dtable">
+        <thead><tr><th>Dimensión</th><th>Score</th><th>Barra</th><th>Nivel</th></tr></thead>
+        <tbody>
+          <tr><td>Relación con el Equipo</td><td style="color:var(--red);font-weight:700;font-family:'IBM Plex Mono',monospace">25%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-red" style="width:25%"></div></div></div></td><td><span class="badge badge-red">Colapso</span></td></tr>
+          <tr><td>Misión y Visión</td><td style="color:var(--red);font-weight:700;font-family:'IBM Plex Mono',monospace">25%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-red" style="width:25%"></div></div></div></td><td><span class="badge badge-red">Colapso</span></td></tr>
+          <tr><td>Habilidad Liderazgo</td><td style="color:var(--red);font-weight:700;font-family:'IBM Plex Mono',monospace">25%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-red" style="width:25%"></div></div></div></td><td><span class="badge badge-red">Colapso</span></td></tr>
+          <tr><td>Liderazgo (Jefe)</td><td style="color:var(--red);font-weight:700;font-family:'IBM Plex Mono',monospace">31%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-red" style="width:31%"></div></div></div></td><td><span class="badge badge-red">Colapso</span></td></tr>
+          <tr><td>Integridad (Gerencia)</td><td style="color:var(--red);font-weight:700;font-family:'IBM Plex Mono',monospace">31%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-red" style="width:31%"></div></div></div></td><td><span class="badge badge-red">Colapso</span></td></tr>
+          <tr><td>Compañerismo</td><td style="color:var(--green);font-weight:700;font-family:'IBM Plex Mono',monospace">100%</td><td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill c-green" style="width:100%"></div></div></div></td><td><span class="badge badge-green">Excelente</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB ROTACIÓN ===== -->
+<div id="tab-rotacion" class="tab-pane">
+  <div class="section-h">Rotación — Análisis Estratégico</div>
+  <div class="kpi-row mb20" style="grid-template-columns:repeat(5,1fr)">
+    <div class="kpi-card red"><div class="kpi-lbl">Total bajas</div><div class="kpi-val" id="kpi-r-bajas">107</div><div class="kpi-sub">filtradas</div></div>
+    <div class="kpi-card green"><div class="kpi-lbl">Total altas</div><div class="kpi-val" id="kpi-r-altas">136</div><div class="kpi-sub">filtradas</div></div>
+    <div class="kpi-card red"><div class="kpi-lbl">Renuncias</div><div class="kpi-val" id="kpi-r-renuncias">52</div><div class="kpi-sub" id="kpi-r-renuncias-sub">48.6% del total</div></div>
+    <div class="kpi-card amber"><div class="kpi-lbl">No inició/Prueba</div><div class="kpi-val" id="kpi-r-noini">15</div><div class="kpi-sub">brecha onboarding</div></div>
+    <div class="kpi-card blue"><div class="kpi-lbl">Neto</div><div class="kpi-val" id="kpi-r-neto">+29</div><div class="kpi-sub">Altas − Bajas</div></div>
+  </div>
+  <div class="grid-3-2 mb20">
+    <div class="card">
+      <div class="card-title">Bajas por unidad — filtradas</div>
+      <div class="chart-wrap chart-tall"><canvas id="chartBajasPorArea"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Motivos de cese</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chartMotivos2"></canvas></div>
+      <div style="margin-top:12px">
+        <table class="dtable" id="tabla-motivos">
+          <thead><tr><th>Motivo</th><th>N°</th><th>%</th></tr></thead>
+          <tbody id="tbody-motivos"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="grid-2 mb20">
+    <div class="card">
+      <div class="card-title">Ranking supervisores con más bajas</div>
+      <table class="dtable">
+        <thead><tr><th>#</th><th>Supervisor</th><th>Bajas</th><th>Renuncias</th><th>Términos</th><th>Score</th></tr></thead>
+        <tbody id="tbody-supervisores"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Altas vs Bajas por área</div>
+      <div class="chart-wrap chart-tall"><canvas id="chartAltasVsBajas"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB SINDICATO ===== -->
+<div id="tab-sindicato" class="tab-pane">
+  <div class="section-h">Exposición Sindical</div>
+  <div class="kpi-row mb20" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi-card red"><div class="kpi-lbl">Total sindicalizados</div><div class="kpi-val" id="kpi-s-total">24</div><div class="kpi-sub">5.7% de plantilla</div></div>
+    <div class="kpi-card amber"><div class="kpi-lbl">Antigüedad media</div><div class="kpi-val">12.6</div><div class="kpi-sub">años afiliados</div></div>
+    <div class="kpi-card red"><div class="kpi-lbl">Mayor concentración</div><div class="kpi-val">9</div><div class="kpi-sub">D. Soporte Zonales</div></div>
+    <div class="kpi-card amber"><div class="kpi-lbl">Sindicatos activos</div><div class="kpi-val">5</div><div class="kpi-sub">nacionales + seccionales</div></div>
+  </div>
+  <div class="grid-2 mb20">
+    <div class="card">
+      <div class="card-title">Concentración por área</div>
+      <div class="chart-wrap chart-tall"><canvas id="chartSindPorArea"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Scoring de riesgo de activación</div>
+      <div id="panel-sind-risk"></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Distribución por sindicato</div>
+      <table class="dtable">
+        <thead><tr><th>#</th><th>Sindicato</th><th>N°</th><th>%</th><th>Alcance</th></tr></thead>
+        <tbody id="tbody-sind-dist"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Distribución geográfica</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chartSindGeo"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB DESEMPEÑO ===== -->
+<div id="tab-desempeno" class="tab-pane">
+  <div class="section-h">Desempeño y Talento</div>
+  <div class="kpi-row mb20" style="grid-template-columns:repeat(5,1fr)">
+    <div class="kpi-card blue"><div class="kpi-lbl">Total talento</div><div class="kpi-val">436</div><div class="kpi-sub">418 activos</div></div>
+    <div class="kpi-card green"><div class="kpi-lbl">Top + Middle Top</div><div class="kpi-val">60</div><div class="kpi-sub">13.8% — talento crítico</div></div>
+    <div class="kpi-card red"><div class="kpi-lbl">Sin evaluación</div><div class="kpi-val">24</div><div class="kpi-sub">5.5% pendientes</div></div>
+    <div class="kpi-card amber"><div class="kpi-lbl">B3+B4 (bajo)</div><div class="kpi-val">37</div><div class="kpi-sub">8.5% — sin retorno</div></div>
+    <div class="kpi-card purple"><div class="kpi-lbl">Solo 3 Top</div><div class="kpi-val">0.7%</div><div class="kpi-sub">Talento crítico escaso</div></div>
+  </div>
+  <div class="grid-2 mb20">
+    <div class="card"><div class="card-title">Curva de talento 2025</div><div class="chart-wrap chart-tall"><canvas id="chartCurvaTalento"></canvas></div></div>
+    <div class="card"><div class="card-title">Calificación 2025</div><div class="chart-wrap chart-tall"><canvas id="chartCalif"></canvas></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Riesgo de fuga — Talento Top</div>
+      <table class="dtable">
+        <thead><tr><th>Segmento</th><th>N°</th><th>%</th><th>Riesgo fuga</th><th>Prioridad</th></tr></thead>
+        <tbody>
+          <tr><td>Top (A4)</td><td>3</td><td>0.7%</td><td><span class="badge badge-red">Alto</span></td><td><span class="badge badge-red">Inmediata</span></td></tr>
+          <tr><td>Above Top (A3)</td><td>19</td><td>4.4%</td><td><span class="badge badge-red">Alto</span></td><td><span class="badge badge-red">Q2 2026</span></td></tr>
+          <tr><td>Middle Top (M4)</td><td>38</td><td>8.7%</td><td><span class="badge badge-amber">Medio</span></td><td><span class="badge badge-amber">Q3 2026</span></td></tr>
+          <tr><td>Middle 1+2</td><td>262</td><td>60.1%</td><td><span class="badge badge-blue">Bajo</span></td><td><span class="badge badge-blue">Monitoreo</span></td></tr>
+          <tr><td>B3+B4 (bajo)</td><td>37</td><td>8.5%</td><td><span class="badge badge-green">Gestionar salida</span></td><td><span class="badge badge-amber">Plan mejora</span></td></tr>
+        </tbody>
+      </table>
+      <div class="alert amber" style="margin-top:12px">
+        <div class="alert-icon">⚠</div>
+        <div class="alert-content">
+          <div class="alert-title">Solo 3 personas "Top" en 436</div>
+          <div class="alert-body">Con clima deteriorado y sin reconocimiento diferenciado, este talento escaso tiene alta probabilidad de abandono. Costo de reemplazo: 6–9 meses de sueldo.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Tipo de contrato</div>
+      <table class="dtable">
+        <thead><tr><th>Tipo</th><th>N°</th><th>%</th><th>Estabilidad</th></tr></thead>
+        <tbody>
+          <tr><td style="font-size:11px">Plazo fijo — Increm. actividades</td><td>254</td><td>58.3%</td><td><span class="badge badge-amber">Media</span></td></tr>
+          <tr><td style="font-size:11px">Plazo Indeterminado</td><td>97</td><td>22.2%</td><td><span class="badge badge-green">Alta</span></td></tr>
+          <tr><td style="font-size:11px">Plazo fijo — Servicio específico</td><td>69</td><td>15.8%</td><td><span class="badge badge-amber">Baja</span></td></tr>
+          <tr><td style="font-size:11px">Indet. sin contrato firmado</td><td>16</td><td>3.7%</td><td><span class="badge badge-red">Riesgo legal</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB MATRIZ ===== -->
+<div id="tab-matriz" class="tab-pane">
+  <div class="section-h">Matriz Relacional Preventiva</div>
+  <div class="alert blue mb20">
+    <div class="alert-icon">ℹ</div>
+    <div class="alert-content">
+      <div class="alert-title">Metodología de scoring</div>
+      <div class="alert-body">Score Riesgo = Clima(30%) + Rotación(30%) + Sindicato(20%) + Desempeño(20%). Los filtros activos aplican sobre toda la matriz.</div>
+    </div>
+  </div>
+  <div class="card mb20 scroll-x">
+    <div class="card-title">Matriz relacional — Por operación <span id="matrix-count" style="font-size:10px;color:var(--gray);margin-left:8px"></span></div>
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th class="left">Operación</th><th>Supervisor</th><th>Clima</th><th>Rotación</th><th>Sindicato</th><th>Desempeño</th><th>Score Riesgo</th><th>Nivel</th><th>Acción</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-matrix"></tbody>
+    </table>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Cruces estratégicos</div>
+      <table class="dtable">
+        <thead><tr><th>Cruce</th><th>Ocurrencia</th><th>Riesgo</th></tr></thead>
+        <tbody>
+          <tr><td style="font-size:11px">Clima bajo + Alta rotación</td><td style="font-size:11px">Zonales 1, 2 · Mi Banco</td><td><span class="badge badge-red">Crítico</span></td></tr>
+          <tr><td style="font-size:11px">Clima bajo + Sindicato</td><td style="font-size:11px">D. Soporte · Normativa</td><td><span class="badge badge-red">Crítico</span></td></tr>
+          <tr><td style="font-size:11px">Supervisor + Fuga talento</td><td style="font-size:11px">Davila (18) · Casos Alva (13)</td><td><span class="badge badge-red">Crítico</span></td></tr>
+          <tr><td style="font-size:11px">Rotación + Sindicato</td><td style="font-size:11px">Zonales 1 · Integratel</td><td><span class="badge badge-red">Crítico</span></td></tr>
+          <tr><td style="font-size:11px">Renuncia + Supervisor</td><td style="font-size:11px">Davila (10 renuncias)</td><td><span class="badge badge-red">Crítico</span></td></tr>
+          <tr><td style="font-size:11px">No inicia + Centro de costo</td><td style="font-size:11px">Pacífico Seguros (3)</td><td><span class="badge badge-amber">Alto</span></td></tr>
+          <tr><td style="font-size:11px">Bajo desempeño + Alta rotación</td><td style="font-size:11px">B3/B4 en áreas críticas</td><td><span class="badge badge-amber">Alto</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Score riesgo global — filtrado</div>
+      <div class="chart-wrap chart-tall"><canvas id="chartRiesgoGlobal"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB ALERTAS ===== -->
+<div id="tab-alertas" class="tab-pane">
+  <div class="section-h">Centro de Alertas</div>
+  <div class="kpi-row mb20" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi-card red"><div class="kpi-lbl">Alertas críticas</div><div class="kpi-val" id="kpi-alert-criticas">8</div><div class="kpi-sub">Acción inmediata</div></div>
+    <div class="kpi-card amber"><div class="kpi-lbl">Seguimiento</div><div class="kpi-val" id="kpi-alert-seguimiento">6</div><div class="kpi-sub">Monitoreo activo</div></div>
+    <div class="kpi-card blue"><div class="kpi-lbl">Preventivas</div><div class="kpi-val" id="kpi-alert-preventivas">4</div><div class="kpi-sub">Acción planificada</div></div>
+    <div class="kpi-card green"><div class="kpi-lbl">Sin alerta</div><div class="kpi-val">0</div><div class="kpi-sub">Ninguna operación</div></div>
+  </div>
+  <div class="grid-2">
+    <div>
+      <h3 style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:12px;font-family:'Syne',sans-serif">🚨 Alertas Críticas</h3>
+      <div id="panel-alertas-criticas"></div>
+    </div>
+    <div>
+      <h3 style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:12px;font-family:'Syne',sans-serif">⚠ Seguimiento y Preventivas</h3>
+      <div id="panel-alertas-seguimiento"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<div class="footer">
+  Dashboard · Inteligencia Organizacional SFM 2026 &nbsp;|&nbsp;
+  Fuentes: Talento (436) · Clima (7 servicios) · Sindicato (24) · Altas (136) · Bajas (107) &nbsp;|&nbsp;
+  Confidencial — Directorio / Gerencia General
+</div>
+
+<script>
+// ============================================================
+// MASTER DATA — se puede sobreescribir con carga Excel
+// ============================================================
+let DB = {
+  operaciones: [
+    {id:'mibanco',      area:'SERVICIO MI BANCO',                          supervisor:'LEON QUIÑONES, MARIA CLAUDIA',      clima:45.4, bajas:4,  altas:4,  sind:0, riesgo:9.8, nivel:'rojo',     motivos:{renuncia:2,termino:2,prueba:0,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'electromec',  area:'DEPTO. PROYECTOS ELECTROMECANICOS',           supervisor:'CACERES FARFAN, JOSEPH',            clima:48.3, bajas:3,  altas:5,  sind:0, riesgo:9.5, nivel:'rojo',     motivos:{renuncia:2,termino:1,prueba:0,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'zonales1',    area:'SERVICIO ZONALES 1',                           supervisor:'DAVILA GRANADOS, JOHN ALONZO',      clima:67,   bajas:18, altas:15, sind:3, riesgo:9.2, nivel:'rojo',     motivos:{renuncia:10,termino:6,prueba:2,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'soportezon',  area:'DEPTO. SOPORTE ZONALES',                      supervisor:'—',                                 clima:null, bajas:2,  altas:3,  sind:9, riesgo:8.8, nivel:'rojo',     motivos:{renuncia:1,termino:1,prueba:0,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'normativa',   area:'DEPTO. NORMATIVA Y AUDITORIA TECNICA',        supervisor:'—',                                 clima:70.9, bajas:2,  altas:2,  sind:1, riesgo:8.5, nivel:'rojo',     motivos:{renuncia:1,termino:1,prueba:0,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'zonales2',    area:'SERVICIO ZONALES 2',                           supervisor:'CASOS ALVA, JUDY FELICITA',         clima:67,   bajas:10, altas:8,  sind:0, riesgo:7.8, nivel:'amarillo', motivos:{renuncia:5,termino:3,prueba:1,no_inicio:1,retiro:0,mutuo:0}},
+    {id:'crediscotia', area:'SERVICIO CREDISCOTIA',                         supervisor:'—',                                 clima:66.3, bajas:2,  altas:3,  sind:0, riesgo:7.5, nivel:'amarillo', motivos:{renuncia:1,termino:1,prueba:0,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'integratel',  area:'SERVICIO INTEGRATEL',                          supervisor:'—',                                 clima:null, bajas:1,  altas:3,  sind:4, riesgo:7.2, nivel:'amarillo', motivos:{renuncia:1,termino:0,prueba:0,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'interbank',   area:'SERVICIO INTERBANK',                           supervisor:'CAIRO MENA, CARMEN MERCEDES',       clima:null, bajas:8,  altas:12, sind:0, riesgo:6.5, nivel:'amarillo', motivos:{renuncia:5,termino:1,prueba:2,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'scotiabank',  area:'SERVICIO SCOTIABANK',                          supervisor:'CRUCES ARCOS, EDWIN ANTONIO',       clima:78.9, bajas:6,  altas:10, sind:1, riesgo:6.0, nivel:'amarillo', motivos:{renuncia:5,termino:1,prueba:0,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'falabella',   area:'SERVICIO FALABELLA',                           supervisor:'—',                                 clima:76.1, bajas:3,  altas:6,  sind:0, riesgo:5.5, nivel:'amarillo', motivos:{renuncia:2,termino:1,prueba:0,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'pacifico',    area:'SERVICIO PACIFICO SEGUROS',                    supervisor:'VILLALOBOS NARRO, VICTOR MANUEL',   clima:null, bajas:6,  altas:4,  sind:1, riesgo:6.8, nivel:'amarillo', motivos:{renuncia:3,termino:0,prueba:0,no_inicio:3,retiro:0,mutuo:0}},
+    {id:'colegios',    area:'SERVICIO COLEGIOS PERUANOS',                   supervisor:'CONTRERAS MORENO, LESLY ROBMERY',   clima:null, bajas:5,  altas:9,  sind:1, riesgo:6.2, nivel:'amarillo', motivos:{renuncia:4,termino:1,prueba:0,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'safety',      area:'DEPTO. DE SAFETY',                             supervisor:'NUÑEZ ZEGARRA, EMELI GERALDINE',    clima:null, bajas:5,  altas:7,  sind:0, riesgo:5.8, nivel:'amarillo', motivos:{renuncia:1,termino:4,prueba:0,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'supermercados',area:'SERVICIO SUPERMERCADOS PERUANOS',             supervisor:'PRETEL SANCHEZ, EDWIN RAUL',         clima:null, bajas:5,  altas:8,  sind:1, riesgo:5.5, nivel:'amarillo', motivos:{renuncia:3,termino:2,prueba:0,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'infraestr',   area:'JEFATURA DE INFRAESTRUCTURA',                  supervisor:'—',                                 clima:null, bajas:5,  altas:4,  sind:2, riesgo:6.0, nivel:'amarillo', motivos:{renuncia:2,termino:3,prueba:0,no_inicio:0,retiro:0,mutuo:0}},
+    {id:'rrhh',        area:'AREA DE RECURSOS HUMANOS',                     supervisor:'—',                                 clima:null, bajas:2,  altas:3,  sind:1, riesgo:5.5, nivel:'amarillo', motivos:{renuncia:0,termino:0,prueba:0,no_inicio:0,retiro:2,mutuo:0}},
+    {id:'segelectr',   area:'DEPTO. SEGURIDAD ELECTRONICA',                 supervisor:'—',                                 clima:null, bajas:5,  altas:4,  sind:0, riesgo:4.5, nivel:'verde',    motivos:{renuncia:3,termino:2,prueba:0,no_inicio:0,retiro:0,mutuo:0}},
+  ],
+  supervisores: [
+    {nombre:'DAVILA GRANADOS, JOHN ALONZO',      area:'SERVICIO ZONALES 1',              bajas:18, renuncias:10, terminos:6, score:9.2, nivel:'rojo'},
+    {nombre:'CASOS ALVA, JUDY FELICITA',          area:'SERVICIO ZONALES 2',              bajas:13, renuncias:8,  terminos:3, score:8.5, nivel:'rojo'},
+    {nombre:'CAIRO MENA, CARMEN MERCEDES',        area:'SERVICIO INTERBANK',              bajas:8,  renuncias:5,  terminos:1, score:7.0, nivel:'amarillo'},
+    {nombre:'VILLALOBOS NARRO, VICTOR MANUEL',    area:'SERVICIO PACIFICO SEGUROS',       bajas:6,  renuncias:3,  terminos:0, score:7.0, nivel:'amarillo'},
+    {nombre:'CRUCES ARCOS, EDWIN ANTONIO',        area:'SERVICIO SCOTIABANK',             bajas:6,  renuncias:5,  terminos:0, score:6.5, nivel:'amarillo'},
+    {nombre:'NUÑEZ ZEGARRA, EMELI GERALDINE',     area:'DEPTO. DE SAFETY',               bajas:5,  renuncias:1,  terminos:4, score:6.5, nivel:'amarillo'},
+    {nombre:'CACERES FARFAN, JOSEPH',             area:'DEPTO. PROYECTOS ELECTROMECANICOS',bajas:5, renuncias:2,  terminos:3, score:6.5, nivel:'amarillo'},
+    {nombre:'CONTRERAS MORENO, LESLY ROBMERY',    area:'SERVICIO COLEGIOS PERUANOS',      bajas:5,  renuncias:3,  terminos:2, score:6.0, nivel:'amarillo'},
+    {nombre:'PRETEL SANCHEZ, EDWIN RAUL',         area:'SERVICIO SUPERMERCADOS PERUANOS', bajas:5,  renuncias:3,  terminos:2, score:6.0, nivel:'amarillo'},
+    {nombre:'LEON QUIÑONES, MARIA CLAUDIA',       area:'SERVICIO MI BANCO',               bajas:4,  renuncias:3,  terminos:1, score:5.5, nivel:'amarillo'},
+  ],
+  sindicato: [
+    {sindicato:'SIND.TRAB.TELEF.DEL PERU (Sitentel)', n:15, pct:62.5, alcance:'Nacional'},
+    {sindicato:'SIND. SECCIONAL HUANCAYO (Sitratel)', n:6,  pct:25.0, alcance:'Regional'},
+    {sindicato:'SIND. SECCIONAL PIURA (Fetratel)',     n:1,  pct:4.2,  alcance:'Seccional'},
+    {sindicato:'SIND. TRABAJADORES TELEF. ICA',        n:1,  pct:4.2,  alcance:'Seccional'},
+    {sindicato:'SIND. TRABAJADORES TELEF. CUSCO',      n:1,  pct:4.2,  alcance:'Seccional'},
+  ]
+};
+
+// ============================================================
+// CHART INSTANCES
+// ============================================================
+const CHR = {};
+
+// ============================================================
+// FILTER STATE
+// ============================================================
+let FS = {area:'', supervisor:'', nivel:'', motivo:''};
+
+// ============================================================
+// HELPER FUNCTIONS
+// ============================================================
+function badgeNivel(n){
+  if(n==='rojo')     return '<span class="badge badge-red">Crítico</span>';
+  if(n==='amarillo') return '<span class="badge badge-amber">Medio</span>';
+  return '<span class="badge badge-green">Controlado</span>';
+}
+function dotNivel(n){
+  if(n==='rojo')     return '<span class="dot-red"></span>';
+  if(n==='amarillo') return '<span class="dot-amber"></span>';
+  return '<span class="dot-green"></span>';
+}
+function scoreColor(v){ return v>=8?'var(--red)':v>=6?'var(--amber)':'var(--green)'; }
+function barColor(v)  { return v<50?'#e53e3e':v<78?'#d97706':'#059669'; }
+
+function getFiltered(){
+  return DB.operaciones.filter(op=>{
+    if(FS.area      && op.area!==FS.area)           return false;
+    if(FS.supervisor && op.supervisor!==FS.supervisor) return false;
+    if(FS.nivel     && op.nivel!==FS.nivel)         return false;
+    if(FS.motivo    && op.motivos[FS.motivo]===0)   return false;
+    return true;
+  });
+}
+function getFilteredSups(){
+  return DB.supervisores.filter(s=>{
+    if(FS.area      && s.area!==FS.area)           return false;
+    if(FS.supervisor && s.nombre!==FS.supervisor)  return false;
+    if(FS.nivel     && s.nivel!==FS.nivel)         return false;
+    return true;
+  });
+}
+
+// ============================================================
+// POPULATE FILTER DROPDOWNS
+// ============================================================
+function populateFilters(){
+  const fArea = document.getElementById('f-area');
+  const fSup  = document.getElementById('f-supervisor');
+  // save current
+  const curArea = fArea.value;
+  const curSup  = fSup.value;
+  // clear existing options except first
+  while(fArea.options.length>1) fArea.remove(1);
+  while(fSup.options.length>1)  fSup.remove(1);
+  // fill areas
+  [...new Set(DB.operaciones.map(o=>o.area))].sort().forEach(a=>{
+    const o=document.createElement('option'); o.value=a; o.text=a; fArea.appendChild(o);
+  });
+  // fill supervisors
+  [...new Set(DB.supervisores.map(s=>s.nombre))].sort().forEach(n=>{
+    const o=document.createElement('option'); o.value=n; o.text=n; fSup.appendChild(o);
+  });
+  // restore
+  fArea.value=curArea; fSup.value=curSup;
+}
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function renderRankingGeneral(ops){
+  const tb=document.getElementById('tbody-ranking-general');
+  if(!ops.length){tb.innerHTML='<tr><td colspan="6" class="no-data">Sin resultados con los filtros aplicados</td></tr>';return;}
+  tb.innerHTML=ops.sort((a,b)=>b.riesgo-a.riesgo).map((op,i)=>`
+    <tr>
+      <td class="rank-n">${i+1}</td>
+      <td style="font-size:11px;font-weight:600">${op.area.replace('DEPTO. ','D. ').replace('SERVICIO ','Serv. ')}</td>
+      <td>${op.clima!=null?`<span class="badge ${op.clima<78?'badge-red':op.clima<85?'badge-amber':'badge-green'}">${op.clima}%</span>`:'<span class="badge badge-gray">—</span>'}</td>
+      <td><strong style="color:${op.bajas>=10?'var(--red)':op.bajas>=5?'var(--amber)':'inherit'}">${op.bajas}</strong></td>
+      <td>${op.sind}</td>
+      <td><span class="badge ${op.nivel==='rojo'?'badge-red':op.nivel==='amarillo'?'badge-amber':'badge-green'}">${op.riesgo}</span></td>
+    </tr>`).join('');
+}
+
+function renderSupervisores(sups){
+  const tb=document.getElementById('tbody-supervisores');
+  if(!sups.length){tb.innerHTML='<tr><td colspan="6" class="no-data">Sin resultados</td></tr>';return;}
+  tb.innerHTML=sups.map((s,i)=>`
+    <tr>
+      <td class="rank-n">${i+1}</td>
+      <td style="font-size:11px">${s.nombre}</td>
+      <td><strong style="color:${s.bajas>=10?'var(--red)':s.bajas>=5?'var(--amber)':'inherit'}">${s.bajas}</strong></td>
+      <td>${s.renuncias}</td>
+      <td>${s.terminos}</td>
+      <td>${badgeNivel(s.nivel).replace('badge-red','badge-red').replace('>Crítico<',`>${s.score}<`)}</td>
+    </tr>`).join('');
+  // fix score display
+  document.querySelectorAll('#tbody-supervisores .badge').forEach((el,i)=>{
+    const s=sups[i]; if(s) el.textContent=s.score;
+  });
+}
+
+function renderMotivos(ops){
+  const agg={renuncia:0,termino:0,prueba:0,no_inicio:0,retiro:0,mutuo:0};
+  ops.forEach(op=>Object.keys(agg).forEach(k=>agg[k]+=op.motivos[k]));
+  const total=Object.values(agg).reduce((a,b)=>a+b,0)||1;
+  const labels={renuncia:'Renuncia Voluntaria',termino:'Término de Contrato',prueba:'Periodo de Prueba',no_inicio:'No inició vínculo',retiro:'Retiro de Confianza',mutuo:'Mutuo Disenso'};
+  const tb=document.getElementById('tbody-motivos');
+  tb.innerHTML=Object.entries(agg).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
+    <tr>
+      <td>${labels[k]}</td>
+      <td><strong style="color:${k==='renuncia'?'var(--red)':'inherit'}">${v}</strong></td>
+      <td>${(v/total*100).toFixed(1)}%</td>
+    </tr>`).join('');
+  return agg;
+}
+
+function renderMatrix(ops){
+  const tb=document.getElementById('tbody-matrix');
+  const cnt=document.getElementById('matrix-count');
+  if(!ops.length){tb.innerHTML='<tr><td colspan="9" class="no-data">Sin resultados con los filtros aplicados</td></tr>';cnt.textContent='';return;}
+  cnt.textContent=`(${ops.length} operaciones)`;
+  const scoreClass=v=>v>=8?'ms-red':v>=6?'ms-amber':'ms-green';
+  tb.innerHTML=ops.sort((a,b)=>b.riesgo-a.riesgo).map(op=>`
+    <tr>
+      <td style="font-size:12px;font-weight:600">${op.area.replace('DEPTO. ','D. ').replace('SERVICIO ','Serv. ')}</td>
+      <td style="font-size:11px;color:var(--gray)">${op.supervisor}</td>
+      <td><span class="matrix-score ${op.clima!=null?scoreClass(10-(op.clima/10)):'ms-gray'}">${op.clima!=null?op.clima+'%':'—'}</span></td>
+      <td><span class="matrix-score ${op.bajas>=10?'ms-red':op.bajas>=5?'ms-amber':'ms-green'}">${op.bajas}</span></td>
+      <td><span class="matrix-score ${op.sind>=5?'ms-red':op.sind>=2?'ms-amber':'ms-green'}">${op.sind}</span></td>
+      <td><span class="matrix-score ms-gray">—</span></td>
+      <td><span style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:${scoreColor(op.riesgo)}">${op.riesgo}</span></td>
+      <td>${dotNivel(op.nivel)}</td>
+      <td><span class="badge ${op.nivel==='rojo'?'badge-red':op.nivel==='amarillo'?'badge-amber':'badge-green'}">${op.nivel==='rojo'?'Urgente':op.nivel==='amarillo'?'Monitoreo':'OK'}</span></td>
+    </tr>`).join('');
+}
+
+function renderTopAlertas(ops){
+  const top=ops.filter(o=>o.nivel==='rojo').sort((a,b)=>b.riesgo-a.riesgo).slice(0,5);
+  const panel=document.getElementById('panel-top-alertas');
+  if(!top.length){panel.innerHTML='<div class="no-data">No hay alertas críticas en la selección actual</div>';return;}
+  panel.innerHTML=top.map(op=>`
+    <div class="alert red">
+      <div class="alert-icon">🔴</div>
+      <div class="alert-content">
+        <div class="alert-title">${op.area}</div>
+        <div class="alert-body">Riesgo: ${op.riesgo}/10 · Bajas: ${op.bajas} · Sind: ${op.sind} · ${op.clima!=null?'Clima: '+op.clima+'%':'Sin dato clima'}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderAlertasPanels(ops){
+  const criticas=ops.filter(o=>o.nivel==='rojo').sort((a,b)=>b.riesgo-a.riesgo);
+  const otras=ops.filter(o=>o.nivel==='amarillo').sort((a,b)=>b.riesgo-a.riesgo);
+  const pc=document.getElementById('panel-alertas-criticas');
+  const ps=document.getElementById('panel-alertas-seguimiento');
+  document.getElementById('kpi-alert-criticas').textContent=criticas.length;
+  document.getElementById('kpi-alert-seguimiento').textContent=otras.length;
+  pc.innerHTML=criticas.length?criticas.map(op=>`
+    <div class="alert red">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-content">
+        <div class="alert-title">${op.area} — Riesgo ${op.riesgo}</div>
+        <div class="alert-body">Bajas: ${op.bajas} · Sindicalizados: ${op.sind} · ${op.clima!=null?'Clima: '+op.clima+'%':''} · Supervisor: ${op.supervisor}</div>
+      </div>
+    </div>`).join(''):'<div class="no-data">Sin alertas críticas en la selección</div>';
+  ps.innerHTML=otras.length?otras.slice(0,6).map(op=>`
+    <div class="alert amber">
+      <div class="alert-icon">⚠</div>
+      <div class="alert-content">
+        <div class="alert-title">${op.area} — Riesgo ${op.riesgo}</div>
+        <div class="alert-body">Bajas: ${op.bajas} · Sindicalizados: ${op.sind} · ${op.clima!=null?'Clima: '+op.clima+'%':''}</div>
+      </div>
+    </div>`).join(''):'<div class="no-data">Sin alertas de seguimiento en la selección</div>';
+}
+
+function renderSindRisk(ops){
+  const panel=document.getElementById('panel-sind-risk');
+  const conSind=ops.filter(o=>o.sind>0).sort((a,b)=>b.sind-a.sind);
+  if(!conSind.length){panel.innerHTML='<div class="no-data">Sin sindicalizados en la selección</div>';return;}
+  panel.innerHTML=conSind.map(op=>`
+    <div class="risk-item">
+      <div class="score-circle ${op.riesgo>=8?'red':op.riesgo>=6?'amber':'green'}">${op.riesgo}</div>
+      <div class="risk-body">
+        <div class="risk-name">${op.area}</div>
+        <div class="risk-desc">${op.sind} sindicalizados · Supervisor: ${op.supervisor} · ${op.clima!=null?'Clima: '+op.clima+'%':'Sin dato clima'}</div>
+        <div class="risk-tags"><span class="badge badge-red">${op.sind} sindicalizados</span><span class="badge ${op.nivel==='rojo'?'badge-red':'badge-amber'}">${op.bajas} bajas</span></div>
+      </div>
+    </div>`).join('');
+}
+
+function renderSindDist(){
+  const tb=document.getElementById('tbody-sind-dist');
+  tb.innerHTML=DB.sindicato.map((s,i)=>`
+    <tr>
+      <td class="rank-n">${i+1}</td>
+      <td style="font-size:11px">${s.sindicato}</td>
+      <td><strong style="color:${i===0?'var(--red)':'inherit'}">${s.n}</strong></td>
+      <td>${s.pct}%</td>
+      <td><span class="badge ${s.alcance==='Nacional'?'badge-red':s.alcance==='Regional'?'badge-amber':'badge-blue'}">${s.alcance}</span></td>
+    </tr>`).join('');
+}
+
+// ============================================================
+// KPI UPDATERS
+// ============================================================
+function updateKPIs(ops){
+  const totalBajas=ops.reduce((s,o)=>s+o.bajas,0);
+  const totalAltas=ops.reduce((s,o)=>s+o.altas,0);
+  const renuncias=ops.reduce((s,o)=>s+o.motivos.renuncia,0);
+  const noIni=ops.reduce((s,o)=>s+o.motivos.no_inicio+o.motivos.prueba,0);
+  const rojos=ops.filter(o=>o.nivel==='rojo').length;
+  const amarillos=ops.filter(o=>o.nivel==='amarillo').length;
+  const verdes=ops.filter(o=>o.nivel==='verde').length;
+  const conClima=ops.filter(o=>o.clima!=null);
+  const minClima=conClima.length?Math.min(...conClima.map(o=>o.clima)):null;
+  const minOp=conClima.find(o=>o.clima===minClima);
+  const criticos=ops.filter(o=>o.clima!=null&&o.clima<78).length;
+  const totalClima=conClima.length;
+  const prom=conClima.length?(conClima.reduce((s,o)=>s+o.clima,0)/conClima.length).toFixed(1):null;
+
+  document.getElementById('kpi-bajas').textContent=totalBajas;
+  document.getElementById('kpi-altas').textContent=totalAltas;
+  document.getElementById('kpi-altas-sub').textContent=`Neto: ${totalAltas>=totalBajas?'+':''}${totalAltas-totalBajas}`;
+  document.getElementById('kpi-bajas-sub').textContent=totalBajas>0?`${(renuncias/totalBajas*100).toFixed(1)}% renuncias`:'';
+  document.getElementById('kpi-riesgo').textContent=`${criticos}/${totalClima||'—'}`;
+  document.getElementById('kpi-climamin').textContent=minClima!=null?minClima+'%':'—';
+  document.getElementById('kpi-climamin-sub').textContent=minOp?minOp.area.replace('SERVICIO ','').replace('DEPTO. ',''):'';
+  document.getElementById('sem-rojo').textContent=rojos;
+  document.getElementById('sem-amarillo').textContent=amarillos;
+  document.getElementById('sem-verde').textContent=verdes;
+  // rotacion tab
+  document.getElementById('kpi-r-bajas').textContent=totalBajas;
+  document.getElementById('kpi-r-altas').textContent=totalAltas;
+  document.getElementById('kpi-r-renuncias').textContent=renuncias;
+  document.getElementById('kpi-r-renuncias-sub').textContent=totalBajas>0?`${(renuncias/totalBajas*100).toFixed(1)}% del total`:'';
+  document.getElementById('kpi-r-noini').textContent=noIni;
+  document.getElementById('kpi-r-neto').textContent=(totalAltas>=totalBajas?'+':'')+(totalAltas-totalBajas);
+  // clima tab
+  if(minClima!=null) document.getElementById('kpi-clima-min2').textContent=minClima+'%';
+  if(minOp) document.getElementById('kpi-clima-min2-sub').textContent=minOp.area.replace('SERVICIO ','').replace('DEPTO. ','');
+  document.getElementById('kpi-clima-criticos').textContent=`${criticos}/${totalClima||'—'}`;
+  if(prom) document.getElementById('kpi-clima-prom').textContent=prom+'%';
+  // sindicato
+  const totalSind=ops.reduce((s,o)=>s+o.sind,0);
+  document.getElementById('kpi-s-total').textContent=totalSind;
+  // global score
+  const avgRiesgo=ops.length?(ops.reduce((s,o)=>s+o.riesgo,0)/ops.length).toFixed(1):0;
+  document.getElementById('score-global').textContent=avgRiesgo;
+  document.getElementById('score-global').style.color=scoreColor(parseFloat(avgRiesgo));
+  // header
+  document.getElementById('hdr-bajas').textContent=totalBajas;
+  document.getElementById('hdr-altas').textContent=totalAltas;
+  document.getElementById('hdr-sind').textContent=totalSind;
+}
+
+// ============================================================
+// CHART UPDATERS
+// ============================================================
+function updateChartClimaOverview(ops){
+  const data=ops.filter(o=>o.clima!=null).sort((a,b)=>a.clima-b.clima);
+  const c=CHR.climaOverview;
+  c.data.labels=data.map(o=>o.area.replace('SERVICIO ','').replace('DEPTO. ','D.'));
+  c.data.datasets[0].data=data.map(o=>o.clima);
+  c.data.datasets[0].backgroundColor=data.map(o=>barColor(o.clima));
+  c.update();
+}
+
+function updateChartMotivos(ops, canvasId, chartKey){
+  const agg={renuncia:0,termino:0,prueba:0,no_inicio:0,retiro:0,mutuo:0};
+  ops.forEach(op=>Object.keys(agg).forEach(k=>agg[k]+=op.motivos[k]));
+  const labels=['Renuncia Vol.','Término','Periodo Prueba','No inició','Retiro','Mutuo'];
+  const vals=Object.values(agg);
+  const c=CHR[chartKey];
+  c.data.datasets[0].data=vals;
+  c.update();
+}
+
+function updateChartBajasPorArea(ops){
+  const sorted=ops.sort((a,b)=>b.bajas-a.bajas).slice(0,12);
+  const c=CHR.bajasPorArea;
+  c.data.labels=sorted.map(o=>o.area.replace('SERVICIO ','').replace('DEPTO. ',''));
+  c.data.datasets[0].data=sorted.map(o=>o.bajas);
+  c.data.datasets[0].backgroundColor=sorted.map(o=>o.bajas>=10?'#e53e3e':o.bajas>=5?'#d97706':'#60a5fa');
+  c.update();
+}
+
+function updateChartAltasVsBajas(ops){
+  const sorted=ops.sort((a,b)=>b.bajas-a.bajas).slice(0,8);
+  const c=CHR.altasVsBajas;
+  c.data.labels=sorted.map(o=>o.area.replace('SERVICIO ','').replace('DEPTO. ',''));
+  c.data.datasets[0].data=sorted.map(o=>o.altas);
+  c.data.datasets[1].data=sorted.map(o=>o.bajas);
+  c.update();
+}
+
+function updateChartRiesgoGlobal(ops){
+  const sorted=ops.sort((a,b)=>b.riesgo-a.riesgo).slice(0,12);
+  const c=CHR.riesgoGlobal;
+  c.data.labels=sorted.map(o=>o.area.replace('SERVICIO ','').replace('DEPTO. ',''));
+  c.data.datasets[0].data=sorted.map(o=>o.riesgo);
+  c.data.datasets[0].backgroundColor=sorted.map(o=>scoreColor(o.riesgo));
+  c.update();
+}
+
+function updateChartSindPorArea(ops){
+  const withSind=ops.filter(o=>o.sind>0).sort((a,b)=>b.sind-a.sind);
+  const c=CHR.sindPorArea;
+  c.data.labels=withSind.map(o=>o.area.replace('SERVICIO ','').replace('DEPTO. ',''));
+  c.data.datasets[0].data=withSind.map(o=>o.sind);
+  c.data.datasets[0].backgroundColor=withSind.map(o=>o.sind>=5?'#e53e3e':o.sind>=3?'#d97706':'#60a5fa');
+  c.update();
+}
+
+function updateChartClimaBar(ops){
+  const data=ops.filter(o=>o.clima!=null).sort((a,b)=>a.clima-b.clima);
+  const c=CHR.climaBar;
+  c.data.labels=data.map(o=>o.area.replace('SERVICIO ','').replace('DEPTO. ',''));
+  c.data.datasets[0].data=data.map(o=>o.clima);
+  c.data.datasets[0].backgroundColor=data.map(o=>barColor(o.clima));
+  c.update();
+}
+
+// ============================================================
+// MASTER RENDER
+// ============================================================
+function renderAll(){
+  const ops=getFiltered();
+  const sups=getFilteredSups();
+  const agg=renderMotivos(ops);
+
+  updateKPIs(ops);
+  renderRankingGeneral(ops);
+  renderTopAlertas(ops);
+  renderSupervisores(sups);
+  renderMatrix(ops);
+  renderAlertasPanels(ops);
+  renderSindRisk(ops);
+
+  updateChartClimaOverview(ops);
+  updateChartMotivos(ops,'chartMotivos','motivos');
+  updateChartMotivos(ops,'chartMotivos2','motivos2');
+  updateChartBajasPorArea(ops);
+  updateChartAltasVsBajas(ops);
+  updateChartRiesgoGlobal(ops);
+  updateChartSindPorArea(ops);
+  updateChartClimaBar(ops);
+}
+
+// ============================================================
+// FILTER ACTIONS
+// ============================================================
+function applyFilters(){
+  FS = {
+    area:       document.getElementById('f-area').value,
+    supervisor: document.getElementById('f-supervisor').value,
+    nivel:      document.getElementById('f-riesgo').value,
+    motivo:     document.getElementById('f-motivo').value
+  };
+  renderAll();
+  const parts=[];
+  if(FS.area)       parts.push('Área: '+FS.area.substring(0,20)+(FS.area.length>20?'…':''));
+  if(FS.supervisor) parts.push('Sup: '+FS.supervisor.split(',')[0]);
+  if(FS.nivel)      parts.push('Nivel: '+FS.nivel);
+  if(FS.motivo)     parts.push('Motivo: '+FS.motivo);
+  document.getElementById('filter-status').textContent = parts.length?`✓ Filtros activos: ${parts.join(' | ')}`:`Mostrando todos los registros (${DB.operaciones.length} operaciones)`;
+}
+
+function clearFilters(){
+  ['f-area','f-supervisor','f-riesgo','f-motivo'].forEach(id=>document.getElementById(id).value='');
+  FS={area:'',supervisor:'',nivel:'',motivo:''};
+  renderAll();
+  document.getElementById('filter-status').textContent=`Mostrando todos los registros (${DB.operaciones.length} operaciones)`;
+}
+
+// ============================================================
+// EXCEL UPLOAD
+// ============================================================
+function handleExcelUpload(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  const prog=document.getElementById('upload-progress');
+  prog.style.display='inline-flex';
+  prog.textContent='⟳ Leyendo '+file.name+'...';
+
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      prog.textContent='⟳ Procesando hojas...';
+      const data=new Uint8Array(e.target.result);
+      const wb=XLSX.read(data,{type:'array',cellDates:true});
+      const sheets=wb.SheetNames;
+      prog.textContent='⟳ Hojas detectadas: '+sheets.join(', ');
+
+      let updatedOps=false, updatedSups=false;
+
+      // --- BAJAS ---
+      const bajasSheet=sheets.find(s=>s.toLowerCase().includes('baja'));
+      if(bajasSheet){
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets[bajasSheet],{defval:''});
+        if(rows.length>0){
+          // Rebuild operations from bajas
+          const byArea={};
+          rows.forEach(r=>{
+            const area=(r['Unidad Organica']||r['Unidad Orgánica']||r['UNIDAD ORGANICA']||'DESCONOCIDO').toString().trim().toUpperCase();
+            const sup=(r['Jefe Responsable']||r['Jefe']||'—').toString().trim().toUpperCase();
+            const motivo=(r['Motivo de Cese']||r['MOTIVO']||'').toString();
+            if(!byArea[area]) byArea[area]={area,supervisor:sup,bajas:0,sind:0,clima:null,motivos:{renuncia:0,termino:0,prueba:0,no_inicio:0,retiro:0,mutuo:0}};
+            byArea[area].bajas++;
+            if(/renuncia/i.test(motivo))         byArea[area].motivos.renuncia++;
+            else if(/término|termino/i.test(motivo)) byArea[area].motivos.termino++;
+            else if(/prueba/i.test(motivo))       byArea[area].motivos.prueba++;
+            else if(/inició|inicio/i.test(motivo)) byArea[area].motivos.no_inicio++;
+            else if(/confianza/i.test(motivo))    byArea[area].motivos.retiro++;
+            else if(/disenso/i.test(motivo))      byArea[area].motivos.mutuo++;
+          });
+
+          // --- ALTAS ---
+          const altasSheet=sheets.find(s=>s.toLowerCase().includes('alta'));
+          if(altasSheet){
+            const altasRows=XLSX.utils.sheet_to_json(wb.Sheets[altasSheet],{defval:''});
+            const byAreaAltas={};
+            altasRows.forEach(r=>{
+              const area=(r['Centro de Costo']||r['Nombre Unidad Orgánica']||r['Nombre Unidad Organica']||'DESCONOCIDO').toString().trim().toUpperCase();
+              byAreaAltas[area]=(byAreaAltas[area]||0)+1;
+            });
+            Object.entries(byAreaAltas).forEach(([a,n])=>{
+              if(byArea[a]) byArea[a].altas=n;
+            });
+          }
+
+          // --- CLIMA ---
+          const climaSheet=sheets.find(s=>s.toLowerCase().includes('clima'));
+          if(climaSheet){
+            const climaRows=XLSX.utils.sheet_to_json(wb.Sheets[climaSheet],{header:1,defval:null});
+            const headRow=climaRows.find(r=>r&&r[2]&&r[2].toString().toLowerCase().includes('asignado'));
+            if(headRow){
+              const serviceNames=headRow.slice(3);
+              serviceNames.forEach((svc,idx)=>{
+                if(!svc) return;
+                const svcu=svc.toString().replace(/[🚨⚠]/g,'').trim().toUpperCase();
+                const vals=[];
+                climaRows.slice(4).forEach(r=>{
+                  if(r&&r[3+idx]!=null){const v=parseFloat(r[3+idx]);if(!isNaN(v))vals.push(v<=1?v*100:v);}
+                });
+                if(vals.length){
+                  const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+                  Object.values(byArea).forEach(op=>{
+                    if(op.area.includes(svcu.replace(/DEPTO\. /,'').replace(/SERVICIO /,'').substring(0,10)))
+                      op.clima=parseFloat(avg.toFixed(1));
+                  });
+                }
+              });
+            }
+          }
+
+          // --- SINDICATO ---
+          const sindSheet=sheets.find(s=>s.toLowerCase().includes('sind')||s.toLowerCase().includes('sindicato'));
+          if(sindSheet){
+            const sindRows=XLSX.utils.sheet_to_json(wb.Sheets[sindSheet],{defval:''});
+            sindRows.forEach(r=>{
+              const area=(r['NOMBRE UNIDAD  ORGANICA']||r['NOMBRE UNIDAD ORGANICA']||r['Unidad Organica']||'').toString().trim().toUpperCase();
+              if(area&&byArea[area]) byArea[area].sind++;
+            });
+          }
+
+          // Compute riesgo
+          const newOps=Object.values(byArea).map((op,i)=>{
+            const climaScore=op.clima!=null?((100-op.clima)/10)*3:5;
+            const rotScore=Math.min(op.bajas/2,10)*3;
+            const sindScore=Math.min(op.sind*2,10)*2;
+            const riesgo=Math.min(((climaScore+rotScore+sindScore)/10),10).toFixed(1);
+            const nivel=riesgo>=8?'rojo':riesgo>=6?'amarillo':'verde';
+            return{id:'op'+i,...op,altas:op.altas||0,riesgo:parseFloat(riesgo),nivel};
+          });
+
+          DB.operaciones=newOps.sort((a,b)=>b.riesgo-a.riesgo);
+          updatedOps=true;
+
+          // Rebuild supervisors from bajas
+          const bySuper={};
+          rows.forEach(r=>{
+            const nom=(r['Jefe Responsable']||r['Jefe']||'').toString().trim().toUpperCase();
+            const motivo=(r['Motivo de Cese']||'').toString();
+            const area=(r['Unidad Organica']||'').toString().trim().toUpperCase();
+            if(!nom||nom==='—'||nom==='') return;
+            if(!bySuper[nom]) bySuper[nom]={nombre:nom,area,bajas:0,renuncias:0,terminos:0};
+            bySuper[nom].bajas++;
+            if(/renuncia/i.test(motivo)) bySuper[nom].renuncias++;
+            if(/término|termino/i.test(motivo)) bySuper[nom].terminos++;
+          });
+          DB.supervisores=Object.values(bySuper).sort((a,b)=>b.bajas-a.bajas).map(s=>{
+            const score=Math.min(s.bajas*0.5,10).toFixed(1);
+            return{...s,score:parseFloat(score),nivel:score>=8?'rojo':score>=5?'amarillo':'verde'};
+          });
+          updatedSups=true;
+        }
+      }
+
+      prog.style.display='none';
+      const msg=`✓ ${file.name} cargado. ${DB.operaciones.length} operaciones · ${DB.supervisores.length} supervisores`;
+      showToast(msg,'success');
+      populateFilters();
+      clearFilters();
+    }catch(err){
+      prog.style.display='none';
+      showToast('✗ Error al procesar: '+err.message,'error');
+      console.error(err);
+    }
+    // reset input
+    event.target.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+type+' show';
+  setTimeout(()=>t.className='toast',4000);
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function showTab(name){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+}
+
+// ============================================================
+// HEATMAP
+// ============================================================
+const HEATMAP_DATA=[
+  ['Alineamiento Estratégico',46,50,69,66,68,75,78],
+  ['Comunicación (Jefe Dir.)',50,56,85,68,100,88,82],
+  ['Misión y Visión',17,25,70,72,100,88,78],
+  ['Confianza en Líderes',50,50,90,61,100,75,83],
+  ['Integridad (Gerencia)',38,31,73,58,65,72,81],
+  ['Habilidad Liderazgo',17,25,70,56,40,63,83],
+  ['Relación Jefe Directo',33,25,70,56,60,75,78],
+  ['Liderazgo (Jefe)',46,31,43,69,65,59,76],
+  ['Relación Interpersonal',33,50,40,78,60,63,72],
+  ['Relación con el Equipo',50,25,50,61,80,50,83],
+  ['Trabajo en Equipo',54,63,88,71,45,100,82],
+  ['Compañerismo',67,100,90,72,60,100,94],
+  ['Oportunidades Desarrollo',67,50,90,78,20,100,78],
+  ['Aprendizaje y Apoyo',33,38,60,75,70,63,78],
+  ['Reconocimiento',33,50,90,78,60,75,78],
+  ['Apreciación (Jefe)',42,38,55,56,60,69,69],
+  ['Empoderamiento',50,25,70,56,60,88,72],
+  ['Responsabilidad',63,69,65,67,75,72,76],
+  ['Autonomía',50,50,40,61,80,63,83],
+  ['Ambiente Laboral',83,75,100,78,80,88,78],
+  ['Recursos',42,50,70,67,60,63,78],
+  ['Cultura',33,50,70,67,60,75,78],
+  ['Coherencia',42,58,73,67,63,75,77],
+  ['Identidad',50,75,80,78,60,88,78]
+];
+function hmClass(v){return v<50?'hm-critical':v<65?'hm-bad':v<78?'hm-warning':v<90?'hm-ok':'hm-good';}
+(function buildHeatmap(){
+  const tb=document.getElementById('heatmap-body');
+  HEATMAP_DATA.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="dim-name">${r[0]}</td>`+r.slice(1).map(v=>`<td class="${hmClass(v)}">${v}%</td>`).join('');
+    tb.appendChild(tr);
+  });
+})();
+
+// ============================================================
+// INIT CHARTS
+// ============================================================
+function initCharts(){
+  const tick={font:{family:"'IBM Plex Mono',monospace",size:10}};
+  const tickI={font:{family:"'Inter',sans-serif",size:10}};
+  const legend={labels:{font:{family:"'Inter',sans-serif",size:10},padding:8}};
+
+  // Clima Overview
+  CHR.climaOverview=new Chart(document.getElementById('chartClimaOverview'),{
+    type:'bar',
+    data:{labels:[],datasets:[{data:[],backgroundColor:[],borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{min:0,max:100,ticks:{...tick,callback:v=>v+'%'},grid:{color:'#f3f4f6'}},y:{ticks:tickI,grid:{display:false}}}}
+  });
+
+  // Motivos donut 1
+  const motivoColors=['#e53e3e','#d97706','#f59e0b','#f97316','#6b7280','#9ca3af'];
+  const motivoLabels=['Renuncia Vol.','Término','Periodo Prueba','No inició','Retiro','Mutuo'];
+  CHR.motivos=new Chart(document.getElementById('chartMotivos'),{
+    type:'doughnut',
+    data:{labels:motivoLabels,datasets:[{data:[52,37,8,7,2,1],backgroundColor:motivoColors,borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{...legend,position:'bottom'}}}
+  });
+
+  // Talento donut (static)
+  new Chart(document.getElementById('chartTalento'),{
+    type:'doughnut',
+    data:{labels:['Top','Middle Top','Middle 2','Middle 1','Sin eval.','M.Bottom','Bottom'],
+          datasets:[{data:[3,57,125,137,24,1,1],backgroundColor:['#059669','#34d399','#60a5fa','#93c5fd','#d1d5db','#fca5a5','#ef4444'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{...legend,position:'bottom'}}}
+  });
+
+  // Sindicato donut (static)
+  new Chart(document.getElementById('chartSindicato'),{
+    type:'doughnut',
+    data:{labels:['Sitentel','Sitratel','Piura','ICA','Cusco'],
+          datasets:[{data:[15,6,1,1,1],backgroundColor:['#e53e3e','#f59e0b','#3b82f6','#8b5cf6','#ec4899'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{...legend,position:'bottom'}}}
+  });
+
+  // Clima bar tab
+  CHR.climaBar=new Chart(document.getElementById('chartClimaBar'),{
+    type:'bar',
+    data:{labels:[],datasets:[{label:'Score Clima (%)',data:[],backgroundColor:[],borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{min:0,max:100,ticks:{...tick,callback:v=>v+'%'},grid:{color:'#f3f4f6'}},x:{ticks:tickI,grid:{display:false}}}}
+  });
+
+  // Radar (static)
+  new Chart(document.getElementById('chartClimaRadar'),{
+    type:'radar',
+    data:{labels:['Alineamiento','Comunicación','Misión/Visión','Liderazgo','Integridad','Reconocimiento','Ambiente','Trabajo Equipo','Cultura','Identidad'],
+          datasets:[
+            {label:'Mi Banco',data:[46,50,17,46,38,33,83,54,33,50],borderColor:'#e53e3e',backgroundColor:'rgba(229,62,62,.1)',pointBackgroundColor:'#e53e3e'},
+            {label:'Scotiabank',data:[78,82,78,76,81,78,78,82,78,78],borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.1)',pointBackgroundColor:'#2563eb'}
+          ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{r:{min:0,max:100,ticks:{font:{size:8},callback:v=>v+'%'},pointLabels:{font:{size:9,family:"'Inter',sans-serif"}}}},
+      plugins:{legend:{labels:{font:{size:11,family:"'Inter',sans-serif"}}}}}
+  });
+
+  // Motivos donut 2
+  CHR.motivos2=new Chart(document.getElementById('chartMotivos2'),{
+    type:'doughnut',
+    data:{labels:motivoLabels,datasets:[{data:[52,37,8,7,2,1],backgroundColor:motivoColors,borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{...legend,position:'right'}}}
+  });
+
+  // Bajas por area
+  CHR.bajasPorArea=new Chart(document.getElementById('chartBajasPorArea'),{
+    type:'bar',
+    data:{labels:[],datasets:[{label:'Bajas',data:[],backgroundColor:[],borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{ticks:tick,grid:{color:'#f3f4f6'}},y:{ticks:tickI,grid:{display:false}}}}
+  });
+
+  // Altas vs Bajas
+  CHR.altasVsBajas=new Chart(document.getElementById('chartAltasVsBajas'),{
+    type:'bar',
+    data:{labels:[],datasets:[{label:'Altas',data:[],backgroundColor:'#34d399',borderRadius:4},{label:'Bajas',data:[],backgroundColor:'#f87171',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11,family:"'Inter',sans-serif"}}}},
+      scales:{y:{ticks:tick,grid:{color:'#f3f4f6'}},x:{ticks:tickI,grid:{display:false}}}}
+  });
+
+  // Sind por area
+  CHR.sindPorArea=new Chart(document.getElementById('chartSindPorArea'),{
+    type:'bar',
+    data:{labels:[],datasets:[{label:'Sindicalizados',data:[],backgroundColor:[],borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{ticks:tick,grid:{color:'#f3f4f6'}},y:{ticks:tickI,grid:{display:false}}}}
+  });
+
+  // Sind geo (static)
+  new Chart(document.getElementById('chartSindGeo'),{
+    type:'doughnut',
+    data:{labels:['Lima','Chiclayo','Piura','ICA','Iquitos','Tacna','Cusco','Trujillo','Loc. Cliente'],
+          datasets:[{data:[11,4,2,1,1,1,1,1,2],backgroundColor:['#1a1a2e','#2563eb','#3b82f6','#60a5fa','#93c5fd','#6b7280','#9ca3af','#d1d5db','#e5e7eb'],borderWidth:1,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{...legend,position:'right',labels:{...legend.labels,font:{size:9,family:"'Inter',sans-serif"}}}}}
+  });
+
+  // Curva talento (static)
+  new Chart(document.getElementById('chartCurvaTalento'),{
+    type:'bar',
+    data:{labels:['Top','Middle Top','Middle 2','Middle 1','Sin Eval.','M.Bottom','Bottom'],
+          datasets:[{data:[3,57,125,137,24,1,1],backgroundColor:['#059669','#34d399','#60a5fa','#93c5fd','#d1d5db','#fca5a5','#e53e3e'],borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:tick,grid:{color:'#f3f4f6'}},x:{ticks:tickI,grid:{display:false}}}}
+  });
+
+  // Calificacion (static)
+  new Chart(document.getElementById('chartCalif'),{
+    type:'bar',
+    data:{labels:['M3','MR 2025','B2','M2','M4','B3','n.a.','A3','B4','A4'],
+          datasets:[{data:[101,88,63,62,38,32,24,19,4,3],
+            backgroundColor:['#60a5fa','#d1d5db','#fca5a5','#93c5fd','#34d399','#fcd34d','#d1d5db','#059669','#f87171','#047857'],borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:tick,grid:{color:'#f3f4f6'}},x:{ticks:{...tick,font:{size:9,family:"'IBM Plex Mono',monospace"}},grid:{display:false}}}}
+  });
+
+  // Riesgo global
+  CHR.riesgoGlobal=new Chart(document.getElementById('chartRiesgoGlobal'),{
+    type:'bar',
+    data:{labels:[],datasets:[{label:'Score Riesgo',data:[],backgroundColor:[],borderRadius:6}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{min:0,max:10,ticks:tick,grid:{color:'#f3f4f6'}},y:{ticks:tickI,grid:{display:false}}}}
+  });
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+window.addEventListener('DOMContentLoaded',()=>{
+  initCharts();
+  populateFilters();
+  renderSindDist();
+  clearFilters();
+});
+</script>
+</body>
+</html>
